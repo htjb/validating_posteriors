@@ -13,7 +13,7 @@ pars = {'pop_sfr_model{0}' :'sfe-func',
                     'pq_func_par4{0}': 1e10, # normalisation mass
                     #'pop_cx{0}' :2.6e39,
                     #'pop_Tmin{0}' :1e4,
-                    #'pop_fesc{0}':0.2,
+                    #'fesc{0}':0.2,
                     #'pop_logN{0}':21,
                     }
 
@@ -25,4 +25,11 @@ ax, zax = sim.GlobalSignature()
 sim2 = ares.simulations.Global21cm()
 sim2.run()
 sim2.GlobalSignature(ax=ax)
+
+pars.append({'fesc': 0.2})
+
+sim2 = ares.simulations.Global21cm(**pars)
+sim2.run()
+sim2.GlobalSignature(ax=ax)
+
 plt.show()
