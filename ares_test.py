@@ -11,10 +11,10 @@ pars = {'pop_sfr_model{0}' :'sfe-func',
                     'pq_func_par2{0}': 0.49, # gamma low
                     'pq_func_par3{0}': -0.61, # gamma high
                     'pq_func_par4{0}': 1e10, # normalisation mass
-                    'pop_cx{0}' :2.6e39,
-                    'pop_Tmin{0}' :1e4,
-                    'pop_fesc{0}':0.2,
-                    'pop_logN{0}':21,
+                    #'pop_cx{0}' :2.6e39,
+                    #'pop_Tmin{0}' :1e4,
+                    #'pop_fesc{0}':0.2,
+                    #'pop_logN{0}':21,
                     }
 
 sim = ares.simulations.Global21cm(**pars)
