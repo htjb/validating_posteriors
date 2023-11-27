@@ -66,7 +66,12 @@ settings = PolyChordSettings(nDims, 0)
 settings.base_dir = f'ares_fiducial_model_noise_{nv}_ARES_{ARES}_FIXED_NOISE_{FIXED_NOISE}'
 
 output = run_polychord(likelihood, nDims, 0, settings, prior)
-paramnames = [('cX', 'c_X'), ('fesc', 'f_{esc}'), ('Tmin', 'T_{min}'), 
+if FIXED_NOISE:
+    paramnames = [('cX', 'c_X'), ('fesc', 'f_{esc}'), ('Tmin', 'T_{min}'), 
               ('logN', '\log N'), ('fstar', 'f_*'), ('Mp', 'M_p'), 
               ('gamma_low', '\gamma_{lo}'), ('gamma_high', '\gamma_{hi}')]
+else:
+    paramnames = [('cX', 'c_X'), ('fesc', 'f_{esc}'), ('Tmin', 'T_{min}'), 
+              ('logN', '\log N'), ('fstar', 'f_*'), ('Mp', 'M_p'), 
+              ('gamma_low', '\gamma_{lo}'), ('gamma_high', '\gamma_{hi}'), ('noise', '\sigma_{noise}')]
 output.make_paramnames_files(paramnames)
