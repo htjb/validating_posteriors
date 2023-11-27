@@ -5,9 +5,6 @@ from pypolychord.settings import PolyChordSettings
 from globalemu.eval import evaluate
 from pypolychord import run_polychord
 import ares
-import matplotlib.pyplot as plt
-from pypolychord.priors import UniformPrior, LogUniformPrior
-import numpy as np
 
 def prior(cube):
     theta = np.zeros_like(cube)
@@ -52,8 +49,8 @@ def likelihood(theta):
     logL = np.sum(-0.5*np.log(2*np.pi*noise**2) - 0.5*(dT_obs - dT)**2/noise**2)
     return logL, []
 
-FIXED_NOISE = False
-ARES = False
+FIXED_NOISE = True
+ARES = True
 nv = 25
 z, dT_obs = np.loadtxt('ares_fiducial_model_noise_%d.txt' % nv, unpack=True)
 
