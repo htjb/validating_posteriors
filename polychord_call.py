@@ -1,10 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import ares
+import pypolychord
 from pypolychord.priors import UniformPrior, LogUniformPrior
 from pypolychord.settings import PolyChordSettings
 from globalemu.eval import evaluate
 from pypolychord import run_polychord
-import ares
 
 def prior(cube):
     theta = np.zeros_like(cube)
@@ -61,9 +62,15 @@ nDims = 8 + (not FIXED_NOISE)
 
 settings = PolyChordSettings(nDims, 0)
 settings.base_dir = f'ares_fiducial_model_noise_{nv}_ARES_{ARES}_FIXED_NOISE_{FIXED_NOISE}'
+#settings.resume = True
 
 output = run_polychord(likelihood, nDims, 0, settings, prior)
-paramnames = [('cX', 'c_X'), ('fesc', 'f_{esc}'), ('Tmin', 'T_{min}'), 
+if FIXED_NOISE:
+    paramnames = [('cX', 'c_X'), ('fesc', 'f_{esc}'), ('Tmin', 'T_{min}'), 
               ('logN', '\log N'), ('fstar', 'f_*'), ('Mp', 'M_p'), 
               ('gamma_low', '\gamma_{lo}'), ('gamma_high', '\gamma_{hi}')]
+else:
+    paramnames = [('cX', 'c_X'), ('fesc', 'f_{esc}'), ('Tmin', 'T_{min}'), 
+              ('logN', '\log N'), ('fstar', 'f_*'), ('Mp', 'M_p'), 
+              ('gamma_low', '\gamma_{lo}'), ('gamma_high', '\gamma_{hi}'), ('noise', '\sigma_{noise}')]
 output.make_paramnames_files(paramnames)
