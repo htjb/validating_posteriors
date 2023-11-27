@@ -30,7 +30,8 @@ def likelihood(theta):
         noise = nv
     else:
         noise = theta[8]
-    
+        theta = theta[:8]
+        
     if ARES:
         pars['pop_fesc{0}'] = theta[1] # fesc
         pars['pop_rad_yield{1}'] = theta[0] # cx
@@ -51,8 +52,8 @@ def likelihood(theta):
     logL = np.sum(-0.5*np.log(2*np.pi*noise**2) - 0.5*(dT_obs - dT)**2/noise**2)
     return logL, []
 
-FIXED_NOISE = True
-ARES = True
+FIXED_NOISE = False
+ARES = False
 nv = 25
 z, dT_obs = np.loadtxt('ares_fiducial_model_noise_%d.txt' % nv, unpack=True)
 
