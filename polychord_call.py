@@ -1,13 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import ares
+import gc
+import pypolychord
 from pypolychord.priors import UniformPrior, LogUniformPrior
 from pypolychord.settings import PolyChordSettings
 from globalemu.eval import evaluate
 from pypolychord import run_polychord
-import ares
-import matplotlib.pyplot as plt
-from pypolychord.priors import UniformPrior, LogUniformPrior
-import numpy as np
 
 def prior(cube):
     theta = np.zeros_like(cube)
@@ -23,7 +22,9 @@ def prior(cube):
         theta[8] = UniformPrior(0, 100)(cube[8]) # noise
     return theta
 
-pars = ares.util.ParameterBundle('mirocha2017:base')
+#pars = ares.util.ParameterBundle('mirocha2017:base')
+import pickle
+pars = pickle.load(open('base_pars.pkl', 'rb'))
 
 def likelihood(theta):
     if FIXED_NOISE:
@@ -50,6 +51,11 @@ def likelihood(theta):
         dT, z = predictor(theta)
 
     logL = np.sum(-0.5*np.log(2*np.pi*noise**2) - 0.5*(dT_obs - dT)**2/noise**2)
+    del sim
+    del dT
+    gc.collect()
+    if logL:
+        print('logL exists ', logL)
     return logL, []
 
 FIXED_NOISE = True
@@ -64,6 +70,7 @@ nDims = 8 + (not FIXED_NOISE)
 
 settings = PolyChordSettings(nDims, 0)
 settings.base_dir = f'ares_fiducial_model_noise_{nv}_ARES_{ARES}_FIXED_NOISE_{FIXED_NOISE}'
+#settings.resume = True
 
 output = run_polychord(likelihood, nDims, 0, settings, prior)
 if FIXED_NOISE:
