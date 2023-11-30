@@ -28,18 +28,18 @@ fig, axes = plt.subplots(2, 3, figsize=(12, 6),
                          sharey='col')
 ax = axes.flatten()
 
-[ax[0].plot(ares_z, s, alpha=0.5 ) for s in ares_tl[:100]]
-[ax[3].plot(zeus_z, s, alpha=0.5 ) for s in zeus_tl[:100]]
+[ax[0].plot(ares_z, s, alpha=1, c=plt.get_cmap('summer')(i/100)) for i, s in enumerate(ares_tl[:100])]
+[ax[3].plot(zeus_z, s, alpha=1, c=plt.get_cmap('summer')(i/100)) for i, s in enumerate(zeus_tl[:100])]
 
-[ax[1].plot(ares_z, s - ares_AFB, alpha=0.5 ) for s in ares_tl[:100]]
-[ax[4].plot(zeus_z, s - zeus_AFB, alpha=0.5 ) for s in zeus_tl[:100]]
+[ax[1].plot(ares_z, s - ares_AFB, alpha=1, c=plt.get_cmap('summer')(i/100)) for i, s in enumerate(ares_tl[:100])]
+[ax[4].plot(zeus_z, s - zeus_AFB, alpha=1, c=plt.get_cmap('summer')(i/100)) for i, s in enumerate(zeus_tl[:100])]
 
 ares_interp = [np.interp(ares_resample, ares_z, s-ares_AFB) for s in ares_tl[:100]]
 # plots the resamples signals with even spaced x ticks
 # even if the resampled points are not evenly spaced
 [ax[2].plot(np.arange(0, len(ares_resample), 1),
     ares_interp[i]/ares_std, 
-    alpha=0.5 ) for i in range(len(ares_interp))]
+    alpha=1, c=plt.get_cmap('summer')(i/100) ) for i in range(len(ares_interp))]
 
 idx = []
 for i in range(len(ares_resample)):
@@ -57,7 +57,7 @@ ax[2].set_xticklabels([
 zeus_interp = [np.interp(zeus_resample, zeus_z, s-zeus_AFB) for s in zeus_tl[:100]]
 [ax[5].plot(np.arange(0, len(zeus_resample), 1),
     zeus_interp[i]/zeus_std, 
-    alpha=0.5 ) for i in range(len(zeus_interp))]
+    alpha=1, c=plt.get_cmap('summer')(i/100)) for i in range(len(zeus_interp))]
 
 idx = []
 for i in range(len(zeus_resample)):
@@ -73,15 +73,15 @@ ax[5].set_xticklabels([
     '{:.0f}'.format(a) for a in zeus_resample[idx]],
     rotation=45)
 
-ax[0].set_ylabel(r'$ T_b$ [mK]')
+ax[0].set_ylabel(r'$ T_{21}$ [mK]')
 ax[3].set_xlabel(r'$z$')
-ax[3].set_ylabel(r'$ T_b$ [mK]')
+ax[3].set_ylabel(r'$ T_{21}$ [mK]')
 ax[4].set_xlabel(r'$z$')
 ax[5].set_xlabel(r'$z$')
-ax[1].set_ylabel(r'$ T_b - T_{AFB}$ [mK]')
-ax[4].set_ylabel(r'$ T_b - T_{AFB}$ [mK]')
-ax[5].set_ylabel(r'$( T_b - T_{AFB})/\sigma_{T_b}$ [mK]')
-ax[2].set_ylabel(r'$( T_b - T_{AFB})/\sigma_{T_b}$ [mK]')
+ax[1].set_ylabel(r'$ T_{21} - T_{AFB}$ [mK]')
+ax[4].set_ylabel(r'$ T_{21} - T_{AFB}$ [mK]')
+ax[5].set_ylabel(r'$( T_{21} - T_{AFB})/\sigma_{T_{21}}$ [mK]')
+ax[2].set_ylabel(r'$( T_{21} - T_{AFB})/\sigma_{T_{21}}$ [mK]')
 
 ax[5].set_xlim(0, len(zeus_resample)-1)
 ax[2].set_xlim(0, len(ares_resample)-1)
@@ -93,4 +93,5 @@ for i in range(len(axes)):
 
 plt.tight_layout()
 #plt.subplots_adjust(wspace=0.05)
+plt.savefig('preprocessing.png', dpi=300)
 plt.show()
