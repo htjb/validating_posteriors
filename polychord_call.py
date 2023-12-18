@@ -47,30 +47,35 @@ def likelihood(theta):
         sim.run()
         z = np.arange(6, 55, 0.1)
         dT = np.interp(z, sim.history['z'][::-1], sim.history['dTb'][::-1])
+        del sim
     else:
         dT, z = predictor(theta)
 
     logL = np.sum(-0.5*np.log(2*np.pi*noise**2) - 0.5*(dT_obs - dT)**2/noise**2)
-    del sim
     del dT
     gc.collect()
-    if logL:
-        print('logL exists ', logL)
     return logL, []
 
 FIXED_NOISE = True
-ARES = True
-nv = 25
+ARES = False
+PROCESSING = True
+nv = 5
 z, dT_obs = np.loadtxt('ares_fiducial_model_noise_%d.txt' % nv, unpack=True)
 
 if not ARES:
-    predictor = evaluate(base_dir='emulators/with_AFB_resampling/', logs=[0, 2, 4, 5])
+    if PROCESSING:
+        predictor = evaluate(base_dir='emulators/with_AFB_resampling/', logs=[0, 2, 4, 5])
+    else:
+        predictor = evaluate(base_dir='emulators/no_AFB_no_resampling/', logs=[0, 2, 4, 5])
 
 nDims = 8 + (not FIXED_NOISE)
 
 settings = PolyChordSettings(nDims, 0)
-settings.base_dir = f'ares_fiducial_model_noise_{nv}_ARES_{ARES}_FIXED_NOISE_{FIXED_NOISE}'
-#settings.resume = True
+if PROCESSING:
+    settings.base_dir = f'ares_fiducial_model_noise_{nv}_ARES_{ARES}_FIXED_NOISE_{FIXED_NOISE}'
+else:
+    settings.base_dir = f'ares_fiducial_model_noise_{nv}_ARES_{ARES}_FIXED_NOISE_{FIXED_NOISE}_no_processing'
+settings.read_resume = True
 
 output = run_polychord(likelihood, nDims, 0, settings, prior)
 if FIXED_NOISE:
