@@ -16,6 +16,9 @@ def prior(cube):
     return theta
 
 pars = ares.util.ParameterBundle('mirocha2017:base')
+import pickle
+pickle.dump(pars, open('base_pars.pkl', 'wb'))
+pars = pickle.load(open('base_pars.pkl', 'rb'))
 for key in pars:
     print(key, pars[key])
 
