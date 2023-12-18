@@ -24,7 +24,8 @@ plt.show()
 
 np.savetxt('ares_fiducial_model.txt', np.c_[z, dT])
 
-noise = [5, 10, 25, 50]
+#noise = [5, 10, 25, 50]
+noise = [1]
 for i in range(len(noise)):
     n = np.random.normal(0, noise[i], len(dT))
     np.savetxt('ares_fiducial_model_noise_%d.txt' % noise[i], np.c_[z, dT+n])
