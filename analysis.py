@@ -12,14 +12,18 @@ ground_truth[2] = np.log10(ground_truth[2])
 prior_lower = [36, 0, np.log10(3e2), 18, -5, 8, 0, -4]
 prior_upper = [41, 1, np.log10(5e5), 23, 0, 15, 2, 0]
 
-nvs = [5, 25]
+nvs = [5, 25, 50]
 FIXED_NOISE = True
 PLOT_POSTERIOR = False
 PLOT_BIAS = False
 CALCULATE_KL = True
 
 if FIXED_NOISE:
-    names = ['cX', 'fesc', 'Tmin', 'logN', 'fstar', 'Mp', 'gamma_low', 'gamma_high']
+    latex_names = [r'$c_X$', r'$f_\mathrm{esc}$', 
+             r'$T_\mathrm{min}$', r'$log N_{HI}$', 
+             r'$f_*$', r'$M_c$', r'$\gamma_\mathrm{lo}$', 
+             r'$\gamma_\mathrm{hi}$']
+    names= ['cX', 'fesc', 'Tmin', 'logN', 'fstar', 'Mp', 'gamma_low', 'gamma_high']
 else:
     names = ['cX', 'fesc', 'Tmin', 'logN', 'fstar', 'Mp', 'gamma_low', 'gamma_high', 'noise']
 
@@ -85,14 +89,14 @@ if CALCULATE_KL:
     from margarine.marginal_stats import calculate
     import tensorflow as tf
 
-    fig, axes = plt.subplots(1, 2, figsize=(6, 4))
+    kls = []
     for j, nv in enumerate(nvs):
         z, dT_obs = np.loadtxt('ares_fiducial_model_noise_%d.txt' % nv, unpack=True)
 
         ares = read_chains(f'ares_fiducial_model_noise_{nv}_ARES_True_FIXED_NOISE_True/test')
         emu = read_chains(f'ares_fiducial_model_noise_{nv}_ARES_False_FIXED_NOISE_True/test')
-        ares = ares.compress(15000)
-        emu = emu.compress(15000)
+        ares = ares.compress(5000)
+        emu = emu.compress(5000)
 
         ares['cX'] = np.log10(ares['cX'])
         ares['Mp'] = np.log10(ares['Mp'])
@@ -111,53 +115,64 @@ if CALCULATE_KL:
         ares_samples = ares_samples[:nsamples]
         emu_samples = emu_samples[:nsamples]
 
-        maf_ares = MAF(ares_samples, weights=ares.get_weights()[:nsamples],
-                       theta_min=prior_lower, theta_max=prior_upper)
-        maf_emu = MAF(emu_samples, weights=emu.get_weights()[:nsamples],
-                      theta_min=prior_lower, theta_max=prior_upper)
+        maf_ares = MAF(ares_samples,
+                       lr=1e-3, number_networks=5, hidden_layers=[250])
+        maf_emu = MAF(emu_samples,
+                      lr=1e-3, number_networks=5, hidden_layers=[250])
 
         try:
             maf_ares = MAF.load(f'{nv}_maf_ARES_True_FIXED_NOISE_True.pkl')
             maf_emu = MAF.load(f'{nv}_maf_ARES_False_FIXED_NOISE_True.pkl')
         except FileNotFoundError:
-            maf_ares.train(10000, early_stop=True)
-            maf_emu.train(10000, early_stop=True)
+            maf_ares.train(1000, early_stop=True)
+            maf_emu.train(1000, early_stop=True)
             maf_ares.save(f'{nv}_maf_ARES_True_FIXED_NOISE_True.pkl')
             maf_emu.save(f'{nv}_maf_ARES_False_FIXED_NOISE_True.pkl')
 
         stats = calculate(maf_ares, prior_de=maf_emu, 
                           samples=maf_ares.sample(nsamples)).statistics()
+        print(stats)
         print(f'{nv} :', stats['KL Divergence'], ' - ',
               stats['KL Divergence'] - stats['KL Lower Bound'], ' + ',
               stats['KL Upper Bound'] - stats['KL Divergence'])
+        
+        kls.append([stats['KL Divergence'], 
+                    stats['KL Divergence'] - stats['KL Lower Bound'],
+                    stats['KL Upper Bound'] - stats['KL Divergence']])
 
-        nd = len(dT_obs)
-        epsilon = np.linspace(0., 0.25, 100)
-        min_error = 0.11/nv
-        emulator_error = 0.82/nv
-        max_error = 2.56/nv
-        limit = 0.5*nd*(epsilon)**2
-        print(np.array([stats['KL Divergence'] - stats['KL Lower Bound'],
-                        stats['KL Upper Bound'] - stats['KL Divergence']]))
-        axes[0].errorbar(emulator_error, stats['KL Divergence'],
-                      yerr=np.array([stats['KL Divergence'] - stats['KL Lower Bound'],
-                        stats['KL Upper Bound'] - stats['KL Divergence']]).reshape(2, 1),
-                        #xerr=[[emulator_error - min_error], [max_error - emulator_error]],
-                      fmt='x', label=f'Noise = {nv}')
-        sigmas = np.linspace(0, 60, 100)
-        axes[1].errorbar(nv, emulator_error*nv, 
-                         yerr=[[emulator_error*nv - min_error*nv], [max_error*nv - emulator_error*nv]],
-                         fmt='x', label=r'$\sigma = $ %.2f mK' % nv)
-    axes[1].plot(sigmas, sigmas*np.sqrt(2/nd), c='k')
-    axes[1].set_xlabel(r'$\sigma$')
-    axes[1].set_ylabel(r'$\mathrm{RMSE}$')
-    axes[0].loglog()
-    axes[0].plot(epsilon, limit, c='k')
-    axes[0].set_xlabel(r'$\mathrm{RMSE}/\sigma$')
-    axes[0].set_ylabel(r'$D_{KL}$')
-    plt.legend()
+    nd = len(np.arange(6, 55, 0.1))
+
+    noise = np.linspace(1, 75, 100)
+    Dkl = np.linspace(0, 10, 100)
+
+    X, Y = np.meshgrid(noise, Dkl)
+
+    limit = np.sqrt(2*Y/nd)*X
+
+    fig, axes = plt.subplots(1, 1, figsize=(6.3, 3))
+    cb = axes.contourf(X, Y, limit, cmap='Blues')
+    plt.colorbar(cb, label='RMSE [mK]')
+    axes.set_xlabel(r'$\sigma$ [mK]')
+    axes.set_ylabel(r'$D_{KL}$')
+
+    actual_rmse = np.array([0.82, 2.56])
+    label= ['_', 'Mean', '_']
+    col = ['r', 'g', 'r']
+    for i,rmse in enumerate(actual_rmse):
+        axes.plot(noise, nd/2*(rmse/noise)**2, 
+                    label=f'{label[i]} = {rmse} mK', ls='--',
+                    color=col[i])
+    axes.set_ylim(0, 10)
+
+    [axes.axvline(l,color='k', ls=':', ymin=0, ymax=5) for l in [5, 25, 50]]
+
+    for i in range(len(nvs)):
+        axes.errorbar(nvs[i], kls[i][0]
+                        , yerr=np.array([kls[i][1], kls[i][2]]).reshape(2, 1)
+                        , fmt='x', label=f'Noise = {nvs[i]} mK',
+                        c='C4')
+
     plt.tight_layout()
-    plt.savefig('kl_divergence.png', dpi=300)
-    plt.close()
-    #plt.show()
+    plt.savefig('kl_divergence.png', dpi=300, bbox_inches='tight')
 
+    plt.show()
