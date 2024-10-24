@@ -2,6 +2,16 @@
 
 Code associated with ...
 
+The idea is to demonstrate that we can recover accurate posterior distributions
+when we use emulators in our inference pipelines. In the paper we define
+an upper limit on the amount of incorrect information inferred when using an
+emulator as a funciton of the emualtors error and the noise in the data. We then
+go on to demonstrate how this limit can be used with an example from
+21cm Cosmology. The paper is largely inspired by the questions asked in
+and in response to [Dorigo Jones+ 2023](https://ui.adsabs.harvard.edu/abs/2023ApJ...959...49D/abstract).
+
+If you have any problems running the code please raise an issue to discuss.
+
 ## Repository Contents
 
 There are a few codes needed to run the analysis in the paper and they are:
