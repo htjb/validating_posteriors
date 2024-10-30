@@ -1,7 +1,7 @@
 cX   \log c_X
 fesc   \log f_{esc}
 Tmin   \log T_{min}
-logN   \log N
+logN   \log N_{HI}
 fstar   f_*
 Mp   M_p
 gamma_low   \gamma_{lo}
