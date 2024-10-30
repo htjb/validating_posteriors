@@ -12,7 +12,7 @@ ground_truth[2] = np.log10(ground_truth[2])
 prior_lower = [36, 0, np.log10(3e2), 18, -5, 8, 0, -4]
 prior_upper = [41, 1, np.log10(5e5), 23, 0, 15, 2, 0]
 
-nvs = [5, 25, 50]
+nvs = [5, 25, 50, 250]
 FIXED_NOISE = True
 PLOT_POSTERIOR = False
 PLOT_BIAS = False
@@ -142,15 +142,15 @@ if CALCULATE_KL:
 
     nd = len(np.arange(6, 55, 0.1))
 
-    noise = np.linspace(1, 75, 100)
-    Dkl = np.linspace(0, 10, 100)
+    noise = np.linspace(1, 260, 200)
+    Dkl = np.linspace(0, 10, 200)
 
     X, Y = np.meshgrid(noise, Dkl)
 
     limit = np.sqrt(2*Y/nd)*X
 
     fig, axes = plt.subplots(1, 1, figsize=(6.3, 3))
-    cb = axes.contourf(X, Y, limit, cmap='Blues')
+    cb = axes.contourf(X, Y, limit, cmap='Blues', levels=10)
     plt.colorbar(cb, label='RMSE [mK]')
     axes.set_xlabel(r'$\sigma$ [mK]')
     axes.set_ylabel(r'$D_{KL}$')
@@ -164,7 +164,7 @@ if CALCULATE_KL:
                     color=col[i])
     axes.set_ylim(0, 10)
 
-    [axes.axvline(l,color='k', ls=':', ymin=0, ymax=5) for l in [5, 25, 50]]
+    [axes.axvline(l,color='k', ls=':', ymin=0, ymax=5) for l in [5, 25, 50, 250]]
 
     for i in range(len(nvs)):
         axes.errorbar(nvs[i], kls[i][0]
