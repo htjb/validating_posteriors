@@ -1,6 +1,6 @@
-cX   c_X
-fesc   f_{esc}
-Tmin   T_{min}
+cX   \log c_X
+fesc   \log f_{esc}
+Tmin   \log T_{min}
 logN   \log N_{HI}
 fstar   f_*
 Mp   M_c
