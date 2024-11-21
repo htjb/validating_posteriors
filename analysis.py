@@ -54,6 +54,7 @@ if PLOT_POSTERIOR:
         plt.close()
 
 if PLOT_BIAS:
+    fig, axes = plt.subplots(1, 1, figsize=(6.3, 3))
     for j, nv in enumerate(nvs):
         chains_ares = read_chains(f'ares_fiducial_model_noise_{nv}_ARES_True_FIXED_NOISE_True/test')
         chains_emu = read_chains(f'ares_fiducial_model_noise_{nv}_ARES_False_FIXED_NOISE_True/test')
@@ -70,10 +71,10 @@ if PLOT_BIAS:
         for i in range(len(emulator_true_bias)):
             offset = width*multiplier
             if j ==0:
-                rects = plt.bar(line[j]+offset, emulator_true_bias[i], 
+                rects = axes.bar(line[j]+offset, emulator_true_bias[i], 
                                 width=width, label=latex_names[i], color='C'+str(i))
             else:
-                plt.bar(line[j]+offset, emulator_true_bias[i], 
+                axes.bar(line[j]+offset, emulator_true_bias[i], 
                         width=width, color='C'+str(i))
             multiplier += 1
 
@@ -82,9 +83,11 @@ if PLOT_BIAS:
     plt.yscale('log')
     plt.axhline(1, color='k', linestyle='--')
     plt.legend(ncols=2)
-    plt.xlabel('Noise')
-    plt.ylabel('Bias')
-    plt.savefig('bias_comparison.png', dpi=300)
+    plt.xlabel(r'$\sigma$ [mK]')
+    plt.ylabel('Emulator Bias')
+    plt.tight_layout()
+    plt.savefig('bias_comparison.png', dpi=300,
+                bbox_inches='tight')
     plt.show()
 
 if CALCULATE_KL:
