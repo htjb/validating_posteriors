@@ -73,7 +73,7 @@ axes.text(45, 3, 'Dark Ages', fontsize=8,
 axes.grid()
 axes.set_xlim(6, 55)
 axes.legend()#loc='upper left', bbox_to_anchor=(0.05, 1.6), fontsize=12)
-axes.set_xlabel('z')
+axes.set_xlabel('Redshift z')
 axes.set_ylabel(r'$|T_{21} - T_{21}^{\rm{emu}}|$ [mK]')
 plt.tight_layout()
 plt.savefig('accuracy_comparison_ares_emulators.png', dpi=300, bbox_inches='tight')
