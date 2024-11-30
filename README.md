@@ -79,7 +79,8 @@ The repository also includes lots of products from the analysis. These include:
     outlined in the globalemu paper.
 
 The training and test data sets used for the emulators are available on
-Zenodo at ...
+Zenodo at ... The signals have been interpolated onto a redshift range of 6 - 55 in steps
+of 0.1.
 
 The file in `ares/` tells ARES where to find certain look up tables that it
 needs to run. 
