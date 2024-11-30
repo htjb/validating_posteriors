@@ -55,6 +55,7 @@ if PLOT_POSTERIOR:
 
 if PLOT_BIAS:
     fig, axes = plt.subplots(1, 1, figsize=(6.3, 3))
+    line = np.array([5, 10, 15, 20])
     for j, nv in enumerate(nvs):
         chains_ares = read_chains(f'ares_fiducial_model_noise_{nv}_ARES_True_FIXED_NOISE_True/test')
         chains_emu = read_chains(f'ares_fiducial_model_noise_{nv}_ARES_False_FIXED_NOISE_True/test')
@@ -65,7 +66,6 @@ if PLOT_BIAS:
                                             - chains_ares[names[i]].mean()))/chains_ares[names[i]].std())
         print(f'{nv} :', np.mean(emulator_true_bias), np.max(emulator_true_bias))
 
-        line = np.array([5, 10, 15, 20])
         width = 0.5
         multiplier= 0
         for i in range(len(emulator_true_bias)):
@@ -74,12 +74,14 @@ if PLOT_BIAS:
                 rects = axes.bar(line[j]+offset, emulator_true_bias[i], 
                                 width=width, label=latex_names[i], color='C'+str(i))
             else:
+                if nv == 250:
+                    print(i, line[j]+offset, emulator_true_bias[i])
                 axes.bar(line[j]+offset, emulator_true_bias[i], 
                         width=width, color='C'+str(i))
             multiplier += 1
 
     plt.xticks(line + 3.5*width, ['5', '25', '50', '250'])
-    plt.ylim(0.01, 10)
+    plt.ylim(0.004, 10)
     plt.yscale('log')
     plt.axhline(1, color='k', linestyle='--')
     plt.legend(ncols=2)
@@ -157,9 +159,9 @@ if CALCULATE_KL:
 
     fig, axes = plt.subplots(1, 1, figsize=(6.3, 3))
     cb = axes.contourf(X, Y, limit, cmap='Blues', levels=10)
-    plt.colorbar(cb, label='RMSE [mK]')
-    axes.set_xlabel(r'$\sigma$ [mK]')
-    axes.set_ylabel(r'$D_{KL}$')
+    plt.colorbar(cb, label='Emulator RMSE [mK]')
+    axes.set_xlabel(r'Noise $\sigma$ [mK]')
+    axes.set_ylabel(r'KL-Divergence $D_{KL}$ [nats]')
 
     actual_rmse = np.array([0.82, 2.56])
     label= ['_', 'Mean', '_']
