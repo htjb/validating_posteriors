@@ -15,12 +15,12 @@ prior_upper = [41, 1, np.log10(5e5), 23, 0, 15, 2, 0]
 nvs = [5, 25, 50, 250]
 FIXED_NOISE = True
 PLOT_POSTERIOR = False
-PLOT_BIAS = False
-CALCULATE_KL = True
+PLOT_BIAS = True
+CALCULATE_KL = False
 
 if FIXED_NOISE:
-    latex_names = [r'$c_X$', r'$f_\mathrm{esc}$', 
-             r'$T_\mathrm{min}$', r'$log N_{HI}$', 
+    latex_names = [r'$\log c_X$', r'$\log f_\mathrm{esc}$', 
+             r'$\log T_\mathrm{min}$', r'$\log N_{HI}$', 
              r'$f_*$', r'$M_c$', r'$\gamma_\mathrm{lo}$', 
              r'$\gamma_\mathrm{hi}$']
     names= ['cX', 'fesc', 'Tmin', 'logN', 'fstar', 'Mp', 'gamma_low', 'gamma_high']
@@ -38,10 +38,13 @@ if PLOT_POSTERIOR:
             chains['fstar'] = np.log10(chains['fstar'])
             chains['Tmin'] = np.log10(chains['Tmin'])
 
+            kwargs = dict(ncompress=True, lower_kwargs=dict(nplot_2d=5000), alpha=0.8)
+
             if i == 0:
-                ax = chains.plot_2d(names, figsize=(10, 10), label='ARES')
+                ax = chains.plot_2d(names, figsize=(10, 10), 
+                                    label='ARES', **kwargs)
             else:
-                chains.plot_2d(ax, label='globalemu')
+                chains.plot_2d(ax, label='globalemu', **kwargs)
 
         for i in range(len(ground_truth)):
             ax.axlines({names[i] : ground_truth[i]}, ls='--', color='r', label='Truth')
@@ -51,6 +54,8 @@ if PLOT_POSTERIOR:
         plt.close()
 
 if PLOT_BIAS:
+    fig, axes = plt.subplots(1, 1, figsize=(6.3, 3))
+    line = np.array([5, 10, 15, 20])
     for j, nv in enumerate(nvs):
         chains_ares = read_chains(f'ares_fiducial_model_noise_{nv}_ARES_True_FIXED_NOISE_True/test')
         chains_emu = read_chains(f'ares_fiducial_model_noise_{nv}_ARES_False_FIXED_NOISE_True/test')
@@ -61,27 +66,30 @@ if PLOT_BIAS:
                                             - chains_ares[names[i]].mean()))/chains_ares[names[i]].std())
         print(f'{nv} :', np.mean(emulator_true_bias), np.max(emulator_true_bias))
 
-        line = np.array([5, 10, 15])
         width = 0.5
         multiplier= 0
         for i in range(len(emulator_true_bias)):
             offset = width*multiplier
             if j ==0:
-                rects = plt.bar(line[j]+offset, emulator_true_bias[i], width=width, label=names[i], color='C'+str(i))
-                #plt.bar_label(rects, padding=3, rotation=90)
+                rects = axes.bar(line[j]+offset, emulator_true_bias[i], 
+                                width=width, label=latex_names[i], color='C'+str(i))
             else:
-                plt.bar(line[j]+offset, emulator_true_bias[i], width=width, color='C'+str(i))
-                #plt.bar_label(rects, padding=3, rotation=90)
+                if nv == 250:
+                    print(i, line[j]+offset, emulator_true_bias[i])
+                axes.bar(line[j]+offset, emulator_true_bias[i], 
+                        width=width, color='C'+str(i))
             multiplier += 1
 
-    plt.xticks(line + 3.5*width, ['5', '25', '50'])
-    plt.ylim(0.01, 10)
+    plt.xticks(line + 3.5*width, ['5', '25', '50', '250'])
+    plt.ylim(0.004, 10)
     plt.yscale('log')
     plt.axhline(1, color='k', linestyle='--')
     plt.legend(ncols=2)
-    plt.xlabel('Noise')
-    plt.ylabel('Bias')
-    plt.savefig('bias_comparison.png', dpi=300)
+    plt.xlabel(r'$\sigma$ [mK]')
+    plt.ylabel('Emulator Bias')
+    plt.tight_layout()
+    plt.savefig('bias_comparison.png', dpi=300,
+                bbox_inches='tight')
     plt.show()
 
 if CALCULATE_KL:
@@ -151,9 +159,9 @@ if CALCULATE_KL:
 
     fig, axes = plt.subplots(1, 1, figsize=(6.3, 3))
     cb = axes.contourf(X, Y, limit, cmap='Blues', levels=10)
-    plt.colorbar(cb, label='RMSE [mK]')
-    axes.set_xlabel(r'$\sigma$ [mK]')
-    axes.set_ylabel(r'$D_{KL}$')
+    plt.colorbar(cb, label='Emulator RMSE [mK]')
+    axes.set_xlabel(r'Noise $\sigma$ [mK]')
+    axes.set_ylabel(r'KL-Divergence $D_{KL}$ [nats]')
 
     actual_rmse = np.array([0.82, 2.56])
     label= ['_', 'Mean', '_']
