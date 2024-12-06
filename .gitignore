@@ -1,2 +1,4 @@
 emulators/*/train_*
 emulators/*/test_*
+emulator_repeats/*/train_*
+emulator_repeats/*/test_*
