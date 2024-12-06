@@ -1,0 +1,5 @@
+batch_size: 451
+epochs: 500
+layer_sizes: [32, 32, 32]
+input_shape: 9
+early_stop: True
