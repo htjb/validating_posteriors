@@ -24,6 +24,7 @@ import pickle
 
 pars = pickle.load(open("base_pars.pkl", "rb"))
 
+
 def aressignal(z, theta):
     pars["pop_fesc{0}"] = theta[1]  # fesc
     pars["pop_rad_yield{1}"] = theta[0]  # cx
@@ -39,6 +40,7 @@ def aressignal(z, theta):
     dT = np.interp(z, sim.history["z"][::-1], sim.history["dTb"][::-1])
     del sim
     return dT
+
 
 validation_set = []
 for t in tqdm(range(len(prior_samples))):
