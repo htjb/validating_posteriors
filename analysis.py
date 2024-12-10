@@ -15,8 +15,8 @@ prior_upper = [41, 1, np.log10(5e5), 23, 0, 15, 2, 0]
 nvs = [5, 25, 50, 250]
 FIXED_NOISE = True
 PLOT_POSTERIOR = False
-PLOT_BIAS = True
-CALCULATE_KL = False
+PLOT_BIAS = False
+CALCULATE_KL = True
 
 if FIXED_NOISE:
     latex_names = [r'$\log c_X$', r'$\log f_\mathrm{esc}$', 
@@ -163,7 +163,7 @@ if CALCULATE_KL:
     axes.set_xlabel(r'Noise $\sigma$ [mK]')
     axes.set_ylabel(r'KL-Divergence $D_{KL}$ [nats]')
 
-    actual_rmse = np.array([0.82, 2.56])
+    actual_rmse = np.array([0.99, 3.14])
     label= ['_', 'Mean', '_']
     col = ['r', 'g', 'r']
     for i,rmse in enumerate(actual_rmse):
