@@ -15,13 +15,13 @@ prior_upper = [41, 1, np.log10(5e5), 23, 0, 15, 2, 0]
 nvs = [5, 25, 50, 250]
 FIXED_NOISE = True
 PLOT_POSTERIOR = False
-PLOT_BIAS = False
-CALCULATE_KL = True
+PLOT_BIAS = True
+CALCULATE_KL = False
 
 if FIXED_NOISE:
     latex_names = [r'$\log c_X$', r'$\log f_\mathrm{esc}$', 
              r'$\log T_\mathrm{min}$', r'$\log N_{HI}$', 
-             r'$f_*$', r'$M_c$', r'$\gamma_\mathrm{lo}$', 
+             r'$\log f_*$', r'$\log M_c$', r'$\gamma_\mathrm{lo}$', 
              r'$\gamma_\mathrm{hi}$']
     names= ['cX', 'fesc', 'Tmin', 'logN', 'fstar', 'Mp', 'gamma_low', 'gamma_high']
 else:
@@ -38,16 +38,18 @@ if PLOT_POSTERIOR:
             chains['fstar'] = np.log10(chains['fstar'])
             chains['Tmin'] = np.log10(chains['Tmin'])
 
-            kwargs = dict(ncompress=True, lower_kwargs=dict(nplot_2d=5000), alpha=0.8)
-
             if i == 0:
                 ax = chains.plot_2d(names, figsize=(10, 10), 
-                                    label='ARES', **kwargs)
+                                    label='ARES')
             else:
-                chains.plot_2d(ax, label='globalemu', **kwargs)
+                chains.plot_2d(ax, label='globalemu')
 
         for i in range(len(ground_truth)):
             ax.axlines({names[i] : ground_truth[i]}, ls='--', color='r', label='Truth')
+        for i in range(len(latex_names)):
+            [ax.iloc[-1, j].set_xlabel(latex_names[j]) for j in range(len(latex_names))]
+            [ax.iloc[j, 0].set_ylabel(latex_names[j]) for j in range(len(latex_names))]
+
         ax.iloc[0, 0].legend(loc='upper left', ncols=3, bbox_to_anchor=(2.25, 1.5))
         plt.savefig(f'posterior_ares_fiducial_model_noise_{nv}_ARES_True_FIXED_NOISE_True.png', dpi=300)
         plt.show()
@@ -65,6 +67,7 @@ if PLOT_BIAS:
             emulator_true_bias.append(np.abs((chains_emu[names[i]].mean()
                                             - chains_ares[names[i]].mean()))/chains_ares[names[i]].std())
         print(f'{nv} :', np.mean(emulator_true_bias), np.max(emulator_true_bias))
+        print(f'nv={nv} :', emulator_true_bias)
 
         width = 0.5
         multiplier= 0
@@ -74,8 +77,6 @@ if PLOT_BIAS:
                 rects = axes.bar(line[j]+offset, emulator_true_bias[i], 
                                 width=width, label=latex_names[i], color='C'+str(i))
             else:
-                if nv == 250:
-                    print(i, line[j]+offset, emulator_true_bias[i])
                 axes.bar(line[j]+offset, emulator_true_bias[i], 
                         width=width, color='C'+str(i))
             multiplier += 1
