@@ -15,8 +15,8 @@ prior_upper = [41, 1, np.log10(5e5), 23, 0, 15, 2, 0]
 nvs = [5, 25, 50, 250]
 FIXED_NOISE = True
 PLOT_POSTERIOR = False
-PLOT_BIAS = True
-CALCULATE_KL = False
+PLOT_BIAS = False
+CALCULATE_KL = True
 
 if FIXED_NOISE:
     latex_names = [r'$\log c_X$', r'$\log f_\mathrm{esc}$', 
@@ -164,21 +164,30 @@ if CALCULATE_KL:
     axes.set_ylabel(r'KL-Divergence $D_{KL}$ [nats]')
 
     actual_rmse = np.array([0.82, 2.56])
-    label= ['_', 'Mean', '_']
-    col = ['r', 'g', 'r']
+    label= ['Mean', '95th Percentile', '_']
+    col = ['k', 'k', 'r']
+    ls = ['--', ':', '-']
     for i,rmse in enumerate(actual_rmse):
         axes.plot(noise, nd/2*(rmse/noise)**2, 
-                    label=f'{label[i]} = {rmse} mK', ls='--',
-                    color=col[i])
-    axes.set_ylim(0, 10)
+                    label=f'{label[i]} = {rmse} mK',
+                    color=col[i], ls=ls[i],
+                    linewidth=4)
 
     [axes.axvline(l,color='k', ls=':', ymin=0, ymax=5) for l in [5, 25, 50, 250]]
 
+    labels = ['Noise = 5, 25, 50, 250 mK', '_', '_', '_']
     for i in range(len(nvs)):
         axes.errorbar(nvs[i], kls[i][0]
                         , yerr=np.array([kls[i][1], kls[i][2]]).reshape(2, 1)
-                        , fmt='x', label=f'Noise = {nvs[i]} mK',
-                        c='C4')
+                        , fmt='o', label=labels[i], capsize=5, elinewidth=2, markeredgewidth=2,
+                        c='red')
+        
+    axes.legend(loc='lower left', ncols=2)
+    axes.axhline(1, color='k', ls='-.')
+        
+    axes.set_xscale('log')
+    axes.set_yscale('log')
+    axes.set_ylim(0, 10)
 
     plt.tight_layout()
     plt.savefig('kl_divergence.png', dpi=300, bbox_inches='tight')
