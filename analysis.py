@@ -17,6 +17,7 @@ FIXED_NOISE = True
 PLOT_POSTERIOR = False
 PLOT_BIAS = False
 CALCULATE_KL = True
+KL_DATA = True
 
 if FIXED_NOISE:
     latex_names = [r'$\log c_X$', r'$\log f_\mathrm{esc}$', 
@@ -94,60 +95,61 @@ if PLOT_BIAS:
     plt.show()
 
 if CALCULATE_KL:
-    from margarine.maf import MAF
-    from margarine.marginal_stats import calculate
-    import tensorflow as tf
+    if KL_DATA:
+        from margarine.maf import MAF
+        from margarine.marginal_stats import calculate
+        import tensorflow as tf
 
-    kls = []
-    for j, nv in enumerate(nvs):
-        z, dT_obs = np.loadtxt('ares_fiducial_model_noise_%d.txt' % nv, unpack=True)
+        kls = []
+        for j, nv in enumerate(nvs):
+            z, dT_obs = np.loadtxt('ares_fiducial_model_noise_%d.txt' % nv, unpack=True)
 
-        ares = read_chains(f'ares_fiducial_model_noise_{nv}_ARES_True_FIXED_NOISE_True/test')
-        emu = read_chains(f'ares_fiducial_model_noise_{nv}_ARES_False_FIXED_NOISE_True/test')
-        ares = ares.compress(5000)
-        emu = emu.compress(5000)
+            ares = read_chains(f'ares_fiducial_model_noise_{nv}_ARES_True_FIXED_NOISE_True/test')
+            emu = read_chains(f'ares_fiducial_model_noise_{nv}_ARES_False_FIXED_NOISE_True/test')
+            ares = ares.compress(5000)
+            emu = emu.compress(5000)
 
-        ares['cX'] = np.log10(ares['cX'])
-        ares['Mp'] = np.log10(ares['Mp'])
-        ares['fstar'] = np.log10(ares['fstar'])
-        ares['Tmin'] = np.log10(ares['Tmin'])
-        emu['cX'] = np.log10(emu['cX'])
-        emu['Mp'] = np.log10(emu['Mp'])
-        emu['fstar'] = np.log10(emu['fstar'])
-        emu['Tmin'] = np.log10(emu['Tmin'])
+            ares['cX'] = np.log10(ares['cX'])
+            ares['Mp'] = np.log10(ares['Mp'])
+            ares['fstar'] = np.log10(ares['fstar'])
+            ares['Tmin'] = np.log10(ares['Tmin'])
+            emu['cX'] = np.log10(emu['cX'])
+            emu['Mp'] = np.log10(emu['Mp'])
+            emu['fstar'] = np.log10(emu['fstar'])
+            emu['Tmin'] = np.log10(emu['Tmin'])
 
-        ares_samples = ares[names].values.astype(np.float32)
-        emu_samples = emu[names].values.astype(np.float32)
-        print(ares_samples.shape, emu_samples.shape)
+            ares_samples = ares[names].values.astype(np.float32)
+            emu_samples = emu[names].values.astype(np.float32)
+            print(ares_samples.shape, emu_samples.shape)
 
-        nsamples = int(np.min([ares_samples.shape[0], emu_samples.shape[0]]))
-        ares_samples = ares_samples[:nsamples]
-        emu_samples = emu_samples[:nsamples]
+            nsamples = int(np.min([ares_samples.shape[0], emu_samples.shape[0]]))
+            ares_samples = ares_samples[:nsamples]
+            emu_samples = emu_samples[:nsamples]
 
-        maf_ares = MAF(ares_samples,
-                       lr=1e-3, number_networks=5, hidden_layers=[250])
-        maf_emu = MAF(emu_samples,
-                      lr=1e-3, number_networks=5, hidden_layers=[250])
+            maf_ares = MAF(ares_samples,
+                        lr=1e-3, number_networks=5, hidden_layers=[250])
+            maf_emu = MAF(emu_samples,
+                        lr=1e-3, number_networks=5, hidden_layers=[250])
 
-        try:
-            maf_ares = MAF.load(f'{nv}_maf_ARES_True_FIXED_NOISE_True.pkl')
-            maf_emu = MAF.load(f'{nv}_maf_ARES_False_FIXED_NOISE_True.pkl')
-        except FileNotFoundError:
-            maf_ares.train(1000, early_stop=True)
-            maf_emu.train(1000, early_stop=True)
-            maf_ares.save(f'{nv}_maf_ARES_True_FIXED_NOISE_True.pkl')
-            maf_emu.save(f'{nv}_maf_ARES_False_FIXED_NOISE_True.pkl')
+            try:
+                maf_ares = MAF.load(f'{nv}_maf_ARES_True_FIXED_NOISE_True.pkl')
+                maf_emu = MAF.load(f'{nv}_maf_ARES_False_FIXED_NOISE_True.pkl')
+            except FileNotFoundError:
+                maf_ares.train(1000, early_stop=True)
+                maf_emu.train(1000, early_stop=True)
+                maf_ares.save(f'{nv}_maf_ARES_True_FIXED_NOISE_True.pkl')
+                maf_emu.save(f'{nv}_maf_ARES_False_FIXED_NOISE_True.pkl')
 
-        stats = calculate(maf_ares, prior_de=maf_emu, 
-                          samples=maf_ares.sample(nsamples)).statistics()
-        print(stats)
-        print(f'{nv} :', stats['KL Divergence'], ' - ',
-              stats['KL Divergence'] - stats['KL Lower Bound'], ' + ',
-              stats['KL Upper Bound'] - stats['KL Divergence'])
-        
-        kls.append([stats['KL Divergence'], 
-                    stats['KL Divergence'] - stats['KL Lower Bound'],
-                    stats['KL Upper Bound'] - stats['KL Divergence']])
+            stats = calculate(maf_ares, prior_de=maf_emu, 
+                            samples=maf_ares.sample(nsamples)).statistics()
+            print(stats)
+            print(f'{nv} :', stats['KL Divergence'], ' - ',
+                stats['KL Divergence'] - stats['KL Lower Bound'], ' + ',
+                stats['KL Upper Bound'] - stats['KL Divergence'])
+            
+            kls.append([stats['KL Divergence'], 
+                        stats['KL Divergence'] - stats['KL Lower Bound'],
+                        stats['KL Upper Bound'] - stats['KL Divergence']])
 
     nd = len(np.arange(6, 55, 0.1))
 
@@ -164,39 +166,39 @@ if CALCULATE_KL:
     axes.set_xlabel(r'Noise $\sigma$ [mK]')
     axes.set_ylabel(r'KL-Divergence $D_{KL}$ [nats]')
 
-<<<<<<< HEAD
     actual_rmse = np.array([0.82, 2.56])
     label= ['Mean', '95th Percentile', '_']
     col = ['k', 'k', 'r']
     ls = ['--', ':', '-']
-=======
-    actual_rmse = np.array([0.99, 3.14])
-    label= ['_', 'Mean', '_']
-    col = ['r', 'g', 'r']
->>>>>>> c9d3840f5da271aa564bc9555d8707606d00d4aa
     for i,rmse in enumerate(actual_rmse):
         axes.plot(noise, nd/2*(rmse/noise)**2, 
                     label=f'{label[i]} = {rmse} mK',
                     color=col[i], ls=ls[i],
-                    linewidth=4)
+                    linewidth=2)
 
-    [axes.axvline(l,color='k', ls=':', ymin=0, ymax=5) for l in [5, 25, 50, 250]]
+    #[axes.axvline(l,color='k', ls=':', ymin=0, ymax=5) for l in [5, 25, 50, 250]]
 
-    labels = ['Noise = 5, 25, 50, 250 mK', '_', '_', '_']
-    for i in range(len(nvs)):
-        axes.errorbar(nvs[i], kls[i][0]
-                        , yerr=np.array([kls[i][1], kls[i][2]]).reshape(2, 1)
-                        , fmt='o', label=labels[i], capsize=5, elinewidth=2, markeredgewidth=2,
-                        c='red')
+    if KL_DATA:
+        labels = ['Noise = 5, 25, 50, 250 mK', '_', '_', '_']
+        for i in range(len(nvs)):
+            axes.errorbar(nvs[i], kls[i][0]
+                            , yerr=np.array([kls[i][1], kls[i][2]]).reshape(2, 1)
+                            , fmt='o', label=labels[i], capsize=3, elinewidth=1.5, markeredgewidth=1,
+                            c='red')
         
-    axes.legend(loc='lower left', ncols=2)
+    axes.legend(loc='upper left', ncols=3, fontsize=8,
+                bbox_to_anchor=(-0.1, 1.2))
     axes.axhline(1, color='k', ls='-.')
         
-    axes.set_xscale('log')
+    #axes.set_xscale('log')
     axes.set_yscale('log')
-    axes.set_ylim(0, 10)
+    axes.set_ylim(1e-3, 10)
 
     plt.tight_layout()
-    plt.savefig('kl_divergence.png', dpi=300, bbox_inches='tight')
+    if KL_DATA:
+        plt.savefig('kl_divergence.png', dpi=300, bbox_inches='tight')
+    else:
+        plt.savefig('kl_divergence_rmse_only.png', dpi=300, bbox_inches='tight')
 
-    plt.show()
+    #plt.show()
+    plt.close()

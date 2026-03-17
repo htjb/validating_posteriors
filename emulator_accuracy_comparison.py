@@ -30,6 +30,38 @@ z = np.arange(6, 55, 0.1)
 parameters = np.loadtxt("signal_data/val_data.txt")
 labels = np.loadtxt("signal_data/val_labels.txt")
 
+fig, axes = plt.subplots(1, 1, figsize=(4, 3))
+predictor = evaluate(
+    base_dir="emulators/with_AFB_resampling/", logs=[0, 2, 4, 5]
+)
+
+sig = [predictor(parameters[i])[0] for i in range(10)]
+
+[
+    plt.plot(
+        1420.4 / (1 + z), labels[i], color="k", label="Truth" if i == 0 else ""
+    )
+    for i in range(10)
+]
+[
+    plt.plot(
+        1420.4 / (1 + z),
+        s,
+        color="r",
+        ls="--",
+        label="Emulator" if s is sig[0] else "",
+    )
+    for s in sig
+]
+plt.xlabel("Frequency [MHz]")
+plt.ylabel(r"$T_{21}$ [mK]")
+plt.legend()
+plt.grid()
+plt.tight_layout()
+plt.savefig("ares_validation_data.png", dpi=300, bbox_inches="tight")
+plt.close()
+exit()
+
 
 def accuracy(z, parameters, labels):
     sig, _ = predictor(parameters)
@@ -42,12 +74,11 @@ emulator = [
     #'with_AFB_only',
     #'with_resampling_only',
     #'emulators/no_AFB_no_resampling',
-    "emulators/no_AFB_no_resampling",
+    # "emulators/no_AFB_no_resampling",
 ]
-label = ["AFB + resampling", "No Preprocessing"]
+label = ["AFB + resampling"]  # , "No Preprocessing"]
 fig, axes = plt.subplots(1, 1, figsize=(6.3, 3))
 for i, e in enumerate(emulator):
-
     predictor = evaluate(base_dir=e + "/", logs=[0, 2, 4, 5])
 
     results = [accuracy(z, p, labels[i]) for i, p in enumerate(parameters)]
@@ -55,12 +86,18 @@ for i, e in enumerate(emulator):
     for j in range(len(results)):
         rba.append(results[j][0])
         rmse.append(results[j][1])
-    axes.plot(z, np.mean(rba, axis=0), label="Mean - " + label[i], color="C" + str(i))
+    axes.plot(
+        z,
+        np.mean(rba, axis=0),
+        label="Mean",
+        # - " + label[i],
+        color="C" + str(i),
+    )
     axes.plot(
         z,
         np.percentile(rba, 95, axis=0),
-        linestßyle="--",
-        label="95\% - " + label[i],
+        linestyle="--",
+        label="95%",  # - " + label[i],
         color="C" + str(i),
     )
 
@@ -71,13 +108,21 @@ for i, e in enumerate(emulator):
 axes.set_ylim(0, 12)
 
 axes.fill_between(
-    np.arange(15, 36, 1), plt.ylim()[0], plt.ylim()[1], color="yellow", alpha=0.2
+    np.arange(15, 36, 1),
+    plt.ylim()[0],
+    plt.ylim()[1],
+    color="yellow",
+    alpha=0.2,
 )
 axes.fill_between(
     np.arange(6, 11, 1), plt.ylim()[0], plt.ylim()[1], color="red", alpha=0.2
 )
 axes.fill_between(
-    np.arange(10, 16, 1), plt.ylim()[0], plt.ylim()[1], color="orange", alpha=0.2
+    np.arange(10, 16, 1),
+    plt.ylim()[0],
+    plt.ylim()[1],
+    color="orange",
+    alpha=0.2,
 )
 axes.fill_between(
     np.arange(35, 56, 1), plt.ylim()[0], plt.ylim()[1], color="grey", alpha=0.2
@@ -125,6 +170,8 @@ axes.set_xlabel("Redshift z")
 axes.set_ylabel(r"$|T_{21} - T_{21}^{\rm{emu}}|$ [mK]")
 plt.tight_layout()
 plt.savefig(
-    "accuracy_comparison_ares_emulators_val_data.png", dpi=300, bbox_inches="tight"
+    "accuracy_comparison_ares_emulators_val_data.png",
+    dpi=300,
+    bbox_inches="tight",
 )
 plt.show()
